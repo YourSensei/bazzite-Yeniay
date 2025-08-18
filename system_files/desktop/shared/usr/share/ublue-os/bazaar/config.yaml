@@ -9,67 +9,67 @@ css: |
      margin: 30px;
      padding: 20px;
   }
-  .bazzite-section banner-text-bg {
-     background-color: var(--accent-color);
-     filter: blur(50px) brightness(0.3);
-     opacity: 0.75;
-     border-radius: 30px;
-  }
   .bazzite-section banner-text {
      padding: 50px;
-     color: lighter(var(--accent-color));
+     color: #ffffff;
   }
   .bazzite-section title {
      color: #ffffff;
   }
   .bazzite-section subtitle {
-    color: var(--accent-color);
-    filter: brightness(1.25);
+    color: #ffffff;
     font-weight: 400;
   }
-  .bazzite-section entry {
-     background: linear-gradient(to right, alpha(var(--accent-color), 0.2), alpha(var(--accent-bg-color), 0.1));
-     transition-property: background;
-     transition-duration: 0.25s;
+  .bazzite-section {
+    margin: 15px;
+    border-radius: 25px;
   }
-  .bazzite-section entry:hover {
-     background: linear-gradient(to right, alpha(var(--accent-bg-color), 0.5), alpha(var(--accent-color), 0.7));
-     transition-property: background;
-     transition-duration: 0.75s;
+  .gaming-section {
+    background: linear-gradient(45deg, #171a49, #52136c);
   }
-  .bazzite-section entry:active {
-     background: linear-gradient(to right, alpha(var(--accent-bg-color), 0.5), alpha(var(--accent-color), 0.7));
-     transition-property: background;
-     transition-duration: 0.15s;
+  .streaming-section {
+    background: linear-gradient(135deg, #3550ec, #252b4b);
+  }
+  .music-section {
+    background: linear-gradient(45deg, #196d28, #3a944a);
+  }
+  .office-section {
+    background: linear-gradient(135deg, #6f8396, #4d5c69);
+  }
+  .utilities-section {
+    background: linear-gradient(45deg, #ed5b00, #a6480d);
   }
 sections:
   - title: "Gaming"
     subtitle: "Protocol 3: Protect the Pilot"
     rows: 4
     banner: file:///usr/share/ublue-os/bazaar/gaming.png
-    banner-fit: cover
+    banner-fit: contain
     banner-text-halign: start
-    banner-text-valign: start
+    banner-text-valign: center
     banner-text-label-xalign: 0.0
-    banner-height: 400
     classes:
       - bazzite-section
+      - gaming-section
     appids:
       - com.heroicgameslauncher.hgl
       - io.itch.itch
+      - io.github.Faugus.faugus-launcher
       - org.prismlauncher.PrismLauncher
       - io.mrarm.mcpelauncher
+      - at.vintagestory.VintageStory
       - org.vinegarhq.Sober
       - org.zdoom.GZDoom
+      - org.zdoom.Raze
       - org.openmw.OpenMW
       - dev.goats.xivlauncher
       - net.retrodeck.retrodeck
       - org.libretro.RetroArch
       - page.kramo.Cartridges
-      - org.pegasus_frontend.Pegasus
       - com.github._0negal.Viper
       - info.cemu.Cemu
       - org.DolphinEmu.dolphin-emu
+      - io.github.shiiion.primehack
       - net.kuribo64.melonDS
       - com.snes9x.Snes9x
       - io.mgba.mGBA
@@ -82,6 +82,10 @@ sections:
       - io.github.stella_emu.Stella
       - org.scummvm.ScummVM
       - io.github.dosbox-staging
+      - rs.ruffle.Ruffle
+      - com.supermodel3.Supermodel
+      - net.hhoney.rota
+      - io.github.doukutsu_rs.doukutsu-rs
       - com.github.k4zmu2a.spacecadetpinball
       - sh.ppy.osu
       - com.pokemmo.PokeMMO
@@ -89,25 +93,26 @@ sections:
       - com.realm667.Wolfenstein_Blade_of_Agony
       - org.srb2.SRB2
       - org.srb2.SRB2Kart
+      - org.kartkrew.RingRacers
       - org.supertuxproject.SuperTux
       - net.supertuxkart.SuperTuxKart
-      - io.github.limo_app.limo
   - title: "Streaming & Chat"
     subtitle: "Sprunk'd it."
     rows: 3
     banner: file:///usr/share/ublue-os/bazaar/streaming.png
-    banner-fit: cover
+    banner-fit: contain
     banner-text-halign: end
-    banner-text-valign: start
+    banner-text-valign: center
     banner-text-label-xalign: 1.0
-    banner-height: 400
     classes:
       - bazzite-section
+      - streaming-section
     appids:
       - com.obsproject.Studio
       - com.feaneron.Boatswain
       - com.moonlight_stream.Moonlight
       - com.valvesoftware.SteamLink
+      - io.github.astralvixen.geforce-infinity
       - com.parsecgaming.parsec
       - com.discordapp.Discord
       - dev.vencord.Vesktop
@@ -121,13 +126,13 @@ sections:
     subtitle: "Let me break it down for you."
     rows: 2
     banner: file:///usr/share/ublue-os/bazaar/music.png
-    banner-fit: cover
+    banner-fit: contain
     banner-text-halign: start
     banner-text-valign: center
     banner-text-label-xalign: 0.0
-    banner-height: 400
     classes:
       - bazzite-section
+      - music-section
     appids:
       - io.bassi.Amberol
       - com.github.neithern.g4music
@@ -138,19 +143,20 @@ sections:
       - com.github.iwalton3.jellyfin-media-player
       - tv.plex.PlexDesktop
       - com.plexamp.Plexamp
+      - rocks.shy.VacuumTube
       - org.strawberrymusicplayer.strawberry
       - camp.nook.nookdesktop
   - title: "Office & Productivity"
     subtitle: "May the paperclip fellow have mercy."
     rows: 2
     banner: file:///usr/share/ublue-os/bazaar/office.png
-    banner-fit: cover
+    banner-fit: contain
     banner-text-halign: end
-    banner-text-valign: start
+    banner-text-valign: center
     banner-text-label-xalign: 1.0
-    banner-height: 400
     classes:
       - bazzite-section
+      - office-section
     appids:
       - org.mozilla.Thunderbird
       - org.libreoffice.LibreOffice
@@ -159,31 +165,45 @@ sections:
       - org.inkscape.Inkscape
       - org.blender.Blender
       - io.github.nokse22.Exhibit
+      - de.leopoldluley.Clapgrep
       - org.audacityteam.Audacity
       - org.ardour.Ardour
       - md.obsidian.Obsidian
       - org.standardnotes.standardnotes
       - com.slack.Slack
       - com.github.IsmaelMartinez.teams_for_linux
-      - org.ardour.Ardour
   - title: "Utilities"
     subtitle: "Stuff you didn't need until now."
     rows: 2
     banner: file:///usr/share/ublue-os/bazaar/utilities.png
-    banner-fit: cover
+    banner-fit: contain
     banner-text-halign: start
-    banner-text-valign: start
+    banner-text-valign: center
     banner-text-label-xalign: 0.0
-    banner-height: 400
     classes:
       - bazzite-section
+      - utilities-section
     appids:
+      - io.github.ilya_zlobintsev.LACT
+      - io.github.limo_app.limo
+      - io.github.radiolamp.mangojuice
+      - io.github.rfrench3.scopebuddy-gui
+      - io.github.trigg.discover_overlay
+      - com.github.wwmm.easyeffects
+      - me.timschneeberger.jdsp4linux
+      - com.github.Alcaro.Flips
+      - io.github.thetumultuousunicornofdarkness.cpu-x
+      - io.github.arunsivaramanneo.GPUViewer
+      - dev.deedles.Trayscale
       - app.drey.Warp
+      - com.rustdesk.RustDesk
       - org.deskflow.deskflow
+      - io.github.pwr_solaar.solaar
+      - it.mijorus.gearlever
+      - io.github.flattool.Ignition
+      - io.github.fastrizwaan.WineZGUI
       - io.github.berarma.Oversteer
       - io.github.lawstorant.boxflat
-      - io.github.radiolamp.mangojuice
-      - io.missioncenter.MissionCenter
       - org.keepassxc.KeePassXC
       - com.bitwarden.desktop
       - org.qbittorrent.qBittorrent
@@ -191,3 +211,4 @@ sections:
       - org.fedoraproject.MediaWriter
       - org.raspberrypi.rpi-imager
       - cc.arduino.IDE2
+      - org.gnome.GHex

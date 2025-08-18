@@ -7,7 +7,7 @@ IMAGE_FLAVOR=$(jq -r '."image-flavor"' < $IMAGE_INFO)
 FEDORA_VERSION=$(jq -r '."fedora-version"' < $IMAGE_INFO)
 
 # SCRIPT VERSION
-HWS_VER=59
+HWS_VER=60
 HWS_VER_FILE="/etc/bazzite/hws_version"
 HWS_VER_RAN=$(cat $HWS_VER_FILE)
 
@@ -140,11 +140,9 @@ elif [[ ":WIN2:" =~ ":$SYS_ID:" ]]; then
     echo "Adding panel orientation for GPD Win 2"
     NEEDED_KARGS+=("--append-if-missing=video=eDP-1:panel_orientation=right_side_up")
   fi
-fi
-
-if [[ ":ONEXPLAYER F1:ONEXPLAYER F1L:ONEXPLAYER F1 EVA-01:ONEXPLAYER X1Pro:" =~ ":$SYS_ID:" ]]; then
+elif [[ ":ONEXPLAYER F1:ONEXPLAYER F1L:ONEXPLAYER F1 EVA-01:ONEXPLAYER X1Pro:Loki Max:Zeenix Pro:" =~ ":$SYS_ID:" ]]; then
   if [[ ! $KARGS =~ "video" ]]; then
-    echo "Adding panel orientation for ONEXPLAYER F1, ONEXFLY, & X1 Pro"
+    echo "Adding panel orientation for ONEXPLAYER F1, ONEXFLY, X1 Pro, Loki Max, & Zeenix Pro"
     NEEDED_KARGS+=("--append-if-missing=video=eDP-1:panel_orientation=left_side_up")
   fi
   if [[ "$(awk '/MemTotal/{print $(NF-1)}' /proc/meminfo)" == "31664740" ]]; then
@@ -152,6 +150,14 @@ if [[ ":ONEXPLAYER F1:ONEXPLAYER F1L:ONEXPLAYER F1 EVA-01:ONEXPLAYER X1Pro:" =~ 
       echo "Adding GTTSize for ONEXPLAYER (32GB RAM)"
       NEEDED_KARGS+=("--append-if-missing=amdgpu.gttsize=16256")
     fi
+  fi
+fi
+
+# Slide reboots randomly, acpi=strict seems to fix it
+if [[ ":SLIDE:" =~ ":$SYS_ID:" ]]; then
+  if [[ ! $KARGS =~ "acpi=strict" ]]; then
+    echo "Adding acpi=strict for Slide to avoid random reboots"
+    NEEDED_KARGS+=("--append-if-missing=acpi=strict")
   fi
 fi
 
@@ -179,7 +185,7 @@ fi
 
 if [[ -n "$NEEDED_KARGS" ]]; then
   echo "Found needed karg changes, applying the following: ${NEEDED_KARGS[*]}"
-  plymouth display-message --text="Updating kargs - Please wait, this may take a while" || true
+  plymouth display-message --text="Preparing System - Please wait, this may take a while" || true
   rpm-ostree kargs ${NEEDED_KARGS[*]} --reboot || exit 1
 else
   echo "No karg changes needed"
@@ -234,18 +240,6 @@ if ((MINIMUM_FREE_ZRAM > CURRENT_FREE_ZRAM)); then
     echo "Found needed minimum-free ZRAM changes, applying the following: ${MINIMUM_FREE_ZRAM}"
 else
   echo "No minimum-free ZRAM changes needed"
-fi
-
-# IWD Setup
-if [[ $IMAGE_NAME =~ "deck" ]]; then
-  if ! nmcli connection show | grep -q wifi; then
-    echo "No preconfigured wifi networks detected, enabling IWD."
-    if ! [[ -f "/etc/NetworkManager/conf.d/iwd.conf" ]]; then
-      mkdir -p "/etc/NetworkManager/conf.d/"
-      printf "[device]\nwifi.backend=iwd" >> "/etc/NetworkManager/conf.d/iwd.conf"
-      echo "IWD Enabled"
-    fi
-  fi
 fi
 
 # FRAMEWORK AMD FIXES
@@ -401,30 +395,6 @@ if [ ! -f /etc/bazzite/fixups/grub_fixup ]; then
   fi
 fi
 touch /etc/bazzite/fixups/grub_fixup
-
-# Fix users who've layered CoolerControl in the past.
-if [ ! -f /etc/bazzite/fixups/coolercontrol_fixup ]; then
-  if rpm-ostree status --booted | grep -q "coolercontrol"; then
-      sed -i 's@enabled=0@enabled=1@g' /etc/yum.repos.d/terra.repo
-  fi
-  touch /etc/bazzite/fixups/coolercontrol_fixup
-fi
-
-# Fix users who've layered LACT in the past.
-if [ ! -f /etc/bazzite/fixups/lact_fixup ]; then
-  if rpm-ostree status --booted | grep -q "lact"; then
-      dnf5 -y copr enable ilyaz/LACT
-  fi
-  touch /etc/bazzite/fixups/lact_fixup
-fi
-
-# Fix users who've layered CDEmu in the past.
-if [ ! -f /etc/bazzite/fixups/cdemu_fixup ]; then
-  if rpm-ostree status --booted | grep -q "cdemu-daemon"; then
-      dnf5 -y copr enable rok/cdemu
-  fi
-  touch /etc/bazzite/fixups/cdemu_fixup
-fi
 
 # Fix missing hostname file breaking distrobox
 if [ ! -f /etc/hostname ]; then
