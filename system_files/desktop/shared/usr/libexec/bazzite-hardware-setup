@@ -7,7 +7,7 @@ IMAGE_FLAVOR=$(jq -r '."image-flavor"' < $IMAGE_INFO)
 FEDORA_VERSION=$(jq -r '."fedora-version"' < $IMAGE_INFO)
 
 # SCRIPT VERSION
-HWS_VER=62
+HWS_VER=63
 HWS_VER_FILE="/etc/bazzite/hws_version"
 HWS_VER_RAN=$(cat $HWS_VER_FILE)
 
@@ -68,14 +68,6 @@ if /usr/libexec/hwsupport/valve-hardware; then
       NEEDED_KARGS+=("--append-if-missing=amdgpu.gttsize=8128")
     fi
   fi
-
-  if [[ $KARGS =~ "amd_pstate=disable" ]]; then
-    NEEDED_KARGS+=("--delete-if-present=amd_pstate=disable")
-  fi
-
-  if [[ ! $KARGS =~ "amd_pstate=passive" ]]; then
-    NEEDED_KARGS+=("--append-if-missing=amd_pstate=passive")
-  fi
 fi
 
 if [[ $IMAGE_NAME =~ "deck" && ":AOKZOE A1 AR07:" =~ ":$SYS_ID:" ]]; then
@@ -134,14 +126,13 @@ fi
 
 # Remove sg_display
 if [[ ":83E1:ROG Ally RC71L:ROG Ally X RC72LA:" =~ ":$SYS_ID:" ]]; then
-  if [[ ! -f /etc/bazzite/fixups/sg_display && $KARGS =~ "amdgpu.sg_display" ]]; then
+  if [[ ! -f /etc/bazzite/fixups/sg_display2 && $KARGS =~ "amdgpu.sg_display" ]]; then
     echo "Removing sd_display=0 (it is not needed anymore)"
     NEEDED_KARGS+=("--delete-if-present=amdgpu.sg_display=0")
   fi
-  touch /etc/bazzite/fixups/sg_display
 fi
 
-if [[ ! -f /etc/bazzite/fixups/orientation_old ]]; then
+if [[ ! -f /etc/bazzite/fixups/orientation_old2 ]]; then
   echo "Removing panel orientation for device in kernel if exists"
   if [[ ":ROG Ally RC71L:" =~ ":$SYS_ID:" ]]; then
     NEEDED_KARGS+=("--delete-if-present=video=eDP-1:panel_orientation=left_side_up")
@@ -154,7 +145,6 @@ if [[ ! -f /etc/bazzite/fixups/orientation_old ]]; then
   elif [[ ":ONEXPLAYER F1:ONEXPLAYER F1L:ONEXPLAYER F1 EVA-01:ONEXPLAYER X1Pro:Loki Max:Zeenix Pro:" =~ ":$SYS_ID:" ]]; then
     NEEDED_KARGS+=("--delete-if-present=video=eDP-1:panel_orientation=left_side_up")
   fi
-  touch /etc/bazzite/fixups/orientation_old
 fi
 
 # Slide reboots randomly, acpi=strict seems to fix it
@@ -177,23 +167,14 @@ if [[ ! $KARGS =~ "disable_ertm" ]]; then
   NEEDED_KARGS+=("--append-if-missing=bluetooth.disable_ertm=1")
 fi
 
-if [[ ! -f /etc/bazzite/fixups/preempt_cleanup && $KARGS =~ "preempt" ]]; then
+if [[ ! -f /etc/bazzite/fixups/preempt_cleanup2 && $KARGS =~ "preempt" ]]; then
   echo "Removing full preemption (once)"
   NEEDED_KARGS+=("--delete-if-present=preempt=full")
 fi
-touch /etc/bazzite/fixups/preempt_cleanup
 
 if [[ $KARGS =~ "nomodeset" ]]; then
   echo "Removing nomodeset"
   NEEDED_KARGS+=("--delete-if-present=nomodeset")
-fi
-
-if [[ -n "$NEEDED_KARGS" ]]; then
-  echo "Found needed karg changes, applying the following: ${NEEDED_KARGS[*]}"
-  plymouth display-message --text="Preparing System - Please wait, this may take a while" || true
-  rpm-ostree kargs ${NEEDED_KARGS[*]} --reboot || exit 1
-else
-  echo "No karg changes needed"
 fi
 
 if [[ $IMAGE_NAME =~ "deck" || $IMAGE_NAME =~ "ally" ]]; then
@@ -221,20 +202,6 @@ if [[ $IMAGE_NAME =~ "deck" || $IMAGE_NAME =~ "ally" ]]; then
     systemctl disable --now batterylimit.service
   fi
   systemctl enable --now ds-inhibit.service
-fi
-
-# FSTAB CONFIGURATION
-if [[ ! -e /etc/ublue-os/.fstab_adjusted.flag && $(grep "compress=zstd" /etc/fstab) ]]; then
-    echo "Applying fstab param adjustments"
-    if grep -q '64GB' <<< "$(lsblk -o MODEL)"; then
-        echo "64GB eMMC detected"
-        sed -i 's/compress=zstd:1/noatime,lazytime,discard=sync,compress-force=zstd:3,space_cache=v2/g' /etc/fstab
-    else
-        sed -i 's/compress=zstd:1/noatime,lazytime,commit=120,discard=async,compress-force=zstd:1,space_cache=v2/g' /etc/fstab
-    fi
-    touch /etc/ublue-os/.fstab_adjusted.flag
-else
-    echo "No fstab param adjustments needed"
 fi
 
 # ZRAM MINIMUM-FREE CONFIGURATION
@@ -339,7 +306,7 @@ if grep -qv "graphical.target" <<< "$(systemctl get-default)"; then
 fi
 
 # Cleanup btrfs oopsie
-# default config has a 10 year limit, which is rediculous
+# default config has a 10 year limit, which is ridiculous
 # FIXME: This fix was added in 12/2024, remove it in a few months
 if [ ! -f /etc/bazzite/fixups/snapper_cleanup ] &&
   [ -f /etc/snapper/configs/root ] &&
@@ -421,9 +388,39 @@ if [ ! -f /etc/hostname ]; then
   touch /etc/hostname
 fi
 
+# Fix Gnome experimental-features when we switched to fedora mutter
+# FIXME: This fix was added in 09/2025, remove it when vrr and fractional scaling are no longer experimental
+if [[ ! -f /etc/bazzite/fixups/gnome_fixup && $IMAGE_NAME =~ "gnome" ]]; then
+  echo "Enabling VRR and fractional scaling"
+  if [[ $IMAGE_NAME =~ "nvidia" ]]; then
+    gsettings set org.gnome.mutter experimental-features "['variable-refresh-rate', scale-monitor-framebuffer', 'xwayland-native-scaling', 'kms-modifiers']"
+  else
+    gsettings set org.gnome.mutter experimental-features "['variable-refresh-rate', scale-monitor-framebuffer', 'xwayland-native-scaling']"
+  fi
+fi
+touch /etc/bazzite/fixups/gnome_fixup
+
+if [[ -n "$NEEDED_KARGS" ]]; then
+  echo "Found needed karg changes, applying the following: ${NEEDED_KARGS[*]}"
+  plymouth display-message --text="Preparing System - Please wait, this may take a while" || true
+  rpm-ostree kargs ${NEEDED_KARGS[*]} || exit 1
+  SHOULD_REBOOT=true
+else
+  echo "No karg changes needed"
+fi
+# Applied / did not need to apply
+touch /etc/bazzite/fixups/sg_display2
+touch /etc/bazzite/fixups/preempt_cleanup2
+touch /etc/bazzite/fixups/orientation_old2
+
 mkdir -p /etc/bazzite
 echo $HWS_VER > $HWS_VER_FILE
 echo $IMAGE_NAME > $KNOWN_IMAGE_NAME_FILE
 echo $IMAGE_FLAVOR > $KNOWN_IMAGE_FLAVOR_FILE
 echo $FEDORA_VERSION > $KNOWN_FEDORA_VERSION_FILE
 echo $IMAGE_BRANCH > $KNOWN_IMAGE_BRANCH_FILE
+
+if [[ "$SHOULD_REBOOT" == true ]]; then
+  echo "Rebooting to apply karg changes"
+  reboot
+fi
